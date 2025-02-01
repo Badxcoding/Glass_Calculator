@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Responsive Glass Calculator with Animated Math Solver AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cedarville+Cursive&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap"
+        rel="stylesheet" />
+    <style>
+        /* Base Styles */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: "Poppins", sans-serif;
+            background: linear-gradient(320deg, #eb92be, #ffef78, #63c9b4);
+            background-size: 200% 200%;
+            animation: moveBackground 8s ease-in-out infinite;
+            animation-delay: 2s;
+        }
+
+        @keyframes moveBackground {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .calculator {
+            width: 320px;
+            padding: 20px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            z-index: 1;
+            box-sizing: border-box;
+        }
+
+        .display {
+            width: 100%;
+            height: 60px;
+            margin-bottom: 20px;
+            background: white;
+            color: black;
+            font-weight: 600;
+            font-size: 2em;
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: right;
+            box-sizing: border-box;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .button {
+            height: 60px;
+            background: white;
+            border: none;
+            border-radius: 10px;
+            color: black;
+            font-size: 1.5em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .button:hover {
+            background: #f0f0f0;
+        }
+
+        .button.operation {
+            color: black;
+        }
+
+        .button.equals {
+            grid-column: span 4;
+            background: #f94144;
+            color: white;
+        }
+
+        .button.equals:hover {
+            background: #f3722c;
+        }
+
+        /* Chat Bubble Styles */
+        #chatBubble {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background-color: #f94144;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Chat Modal Styles */
+        #chatModal {
+            position: fixed;
+            bottom: 110px;
+            right: 30px;
+            width: 320px;
+            min-height: 250px;
+            max-height: 500px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        /* Visible state */
+        #chatModal.active {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        #chatHeader {
+            background: rgba(234, 234, 234, 0.217);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 1.2em;
+            position: relative;
+        }
+
+        #chatHeader span {
+            cursor: pointer;
+            position: absolute;
+            right: 15px;
+            top: 10px;
+            font-size: 1.2em;
+        }
+
+        #chatContent {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            font-size: 1em;
+            color: rgb(255, 255, 255);
+        }
+
+        #chatInputArea {
+            display: flex;
+            /* padding-top: 2px; */
+            border-top: 1px solid #ccc;
+        }
+
+        #chatInput {
+            flex: 1;
+            border: none;
+            padding: 10px;
+            padding-left: 15px;
+            padding-bottom: 10px;
+            font-size: 1em;
+            box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        #chatInput:focus {
+            outline: none;
+        }
+
+        #chatSend {
+            background: #f94144;
+            border: none;
+            color: white;
+            border-top-left-radius: 40px;
+            border-bottom-left-radius: 40px;
+            padding: 0 20px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .calculator {
+                width: 90%;
+                padding: 15px;
+            }
+
+            .display {
+                height: 50px;
+                font-size: 1.8em;
+            }
+
+            .button {
+                height: 50px;
+                font-size: 1.3em;
+            }
+
+            #chatModal {
+                width: 90%;
+                right: 5%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .calculator {
+                width: 95%;
+                padding: 10px;
+            }
+
+            .display {
+                height: 45px;
+                font-size: 1.6em;
+            }
+
+            .button {
+                height: 45px;
+                font-size: 1.2em;
+            }
+
+            #chatBubble {
+                width: 50px;
+                height: 50px;
+                font-size: 1.6em;
+                bottom: 20px;
+                right: 20px;
+            }
+
+            #chatModal {
+                bottom: 80px;
+                width: 95%;
+                right: 2.5%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="calculator">
+        <input type="text" class="display" id="display" readonly />
+        <div class="buttons">
+            <button class="button" onclick="appendNumber('7')">7</button>
+            <button class="button" onclick="appendNumber('8')">8</button>
+            <button class="button" onclick="appendNumber('9')">9</button>
+            <button class="button operation" onclick="setOperation('/')">&divide;</button>
+
+            <button class="button" onclick="appendNumber('4')">4</button>
+            <button class="button" onclick="appendNumber('5')">5</button>
+            <button class="button" onclick="appendNumber('6')">6</button>
+            <button class="button operation" onclick="setOperation('*')">&times;</button>
+
+            <button class="button" onclick="appendNumber('1')">1</button>
+            <button class="button" onclick="appendNumber('2')">2</button>
+            <button class="button" onclick="appendNumber('3')">3</button>
+            <button class="button operation" onclick="setOperation('-')">&minus;</button>
+
+            <button class="button" onclick="appendNumber('0')">0</button>
+            <button class="button" onclick="appendNumber('.')">.</button>
+            <button class="button operation" onclick="clearDisplay()">C</button>
+            <button class="button operation" onclick="setOperation('+')">+</button>
+
+            <button class="button equals" onclick="calculate()">=</button>
+        </div>
+    </div>
+
+    <!-- Chat Bubble -->
+    <div id="chatBubble">
+        <img width="30px" src="download.svg" alt="">
+    </div>
+
+    <!-- Chat Modal for Math Solver AI -->
+    <div id="chatModal">
+        <div id="chatHeader">
+            Math Solver AI
+            <span onclick="toggleChat()">✖</span>
+        </div>
+        <div id="chatContent">
+            <p>Enter a math expression or equation.</p>
+            <!-- <p>Examples:</p>
+            <ul>
+                <li><code>2+3*4</code></li>
+                <li><code>5*x+3=18</code></li>
+            </ul> -->
+            <div id="solverOutput" style="margin-top:10px; color:#333;"></div>
+        </div>
+        <div id="chatInputArea">
+            <input type="text" id="chatInput" placeholder="Type your problem here..." />
+            <button id="chatSend" onclick="processSolver()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // Calculator functions
+        const display = document.getElementById("display");
+        let currentOperand = "";
+        let previousOperand = "";
+        let operation = null;
+
+        function appendNumber(number) {
+            currentOperand += number;
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            display.value = currentOperand;
+        }
+
+        function clearDisplay() {
+            currentOperand = "";
+            previousOperand = "";
+            operation = null;
+            updateDisplay();
+        }
+
+        function setOperation(op) {
+            if (currentOperand === "") return;
+            if (previousOperand !== "") calculate();
+            operation = op;
+            previousOperand = currentOperand;
+            currentOperand = "";
+        }
+
+        function calculate() {
+            let result;
+            const prev = parseFloat(previousOperand);
+            const current = parseFloat(currentOperand);
+            if (isNaN(prev) || isNaN(current)) return;
+            switch (operation) {
+                case "+":
+                    result = prev + current;
+                    break;
+                case "-":
+                    result = prev - current;
+                    break;
+                case "*":
+                    result = prev * current;
+                    break;
+                case "/":
+                    result = prev / current;
+                    break;
+                default:
+                    return;
+            }
+            currentOperand = result;
+            operation = null;
+            previousOperand = "";
+            updateDisplay();
+        }
+
+        // Chat Bubble & Modal functions
+        const chatBubble = document.getElementById("chatBubble");
+        const chatModal = document.getElementById("chatModal");
+
+        chatBubble.addEventListener("click", toggleChat);
+
+        function toggleChat() {
+            chatModal.classList.toggle("active");
+        }
+
+        const chatBotResponses = {
+            "hello": "Hi there! How can I assist you?",
+            "hi": "Hi there! How can I assist you?",
+            "how are you": "I'm just an AI, but I'm doing great! How about you?",
+            "what's your name": "I'm your math solver",
+            "who created you": "01110100 01100001 01100110 01110011 01101001 01110010 created me",
+            "bye": "Goodbye! Have a great day!",
+            "default": "I'm not sure I understand. Can you rephrase that?"
+        };
+
+        function getBotResponse(userInput) {
+            userInput = userInput.toLowerCase();
+            return chatBotResponses[userInput] || chatBotResponses["default"];
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const chatInput = document.getElementById("chat-input");
+            const chatOutput = document.getElementById("chat-output");
+            const sendButton = document.getElementById("chatbutton");
+
+            function sendMessage() {
+                const userMessage = chatInput.value.trim();
+                if (userMessage === "") return;
+
+                const botResponse = getBotResponse(userMessage);
+                chatOutput.innerHTML += `<p><strong>You:</strong> ${userMessage}</p>`;
+                chatOutput.innerHTML += `<p><strong>Bot:</strong> ${botResponse}</p>`;
+
+                chatInput.value = "";
+                chatOutput.scrollTop = chatOutput.scrollHeight;
+            }
+
+            sendButton.addEventListener("click", sendMessage);
+            chatInput.addEventListener("keypress", function (event) {
+                if (event.key === "Enter") sendMessage();
+            });
+        });
+
+
+        // Simple Math Solver AI in JavaScript
+        // Note: This simple version uses eval() for basic arithmetic.
+        function processSolver() {
+            const input = document.getElementById("chatInput").value.trim();
+            const outputDiv = document.getElementById("solverOutput");
+            if (!input) {
+                outputDiv.innerHTML = "<p>Please enter a math problem.</p>";
+                return;
+            }
+            try {
+                if (input.includes("=")) {
+                    // Split on the first "=" only
+                    let [left, right] = input.split("=");
+                    let leftEval = eval(left);
+                    let rightEval = eval(right);
+                    outputDiv.innerHTML = `<p>Left side = ${leftEval}<br>Right side = ${rightEval}</p>`;
+                    if (leftEval === rightEval) {
+                        outputDiv.innerHTML += "<p>The equation is balanced.</p>";
+                    } else {
+                        outputDiv.innerHTML += "<p>The equation is not balanced.</p>";
+                    }
+                } else {
+                    let result = eval(input);
+                    outputDiv.innerHTML = `<p>Result: ${result}</p>`;
+                }
+            } catch (error) {
+                outputDiv.innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+
+</html>
